@@ -8,8 +8,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/CMake")
 file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/bin/CMake")
 
 set(CMAKE_CXX_STANDARD 14)
-# disable on win build
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+if(WIN32)
+   # disable on win build
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+endif()
+if(APPLE)
+  message(STATUS "Configuring universal macOS build (x86_64 + arm64)")
+  set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "" FORCE)
+endif()
+
 
 function(add_cxx_compiler_flags)
     set(CMAKE_REQUIRED_QUIET true)
@@ -27,7 +34,17 @@ function(add_cxx_compiler_flags)
 endfunction()
 add_cxx_compiler_flags(-pedantic -fno-permissive -pedantic-errors -Wall -Wextra -Wshadow -Wstrict-aliasing -Wno-misleading-indentation "-ftemplate-depth=1024")
 
+if(APPLE)
+  message(STATUS "Configuring for macOS")
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
+  add_cxx_compiler_flags(-O3 -mavx -mavx2 -fPIC -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-missing-braces)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+  add_cxx_compiler_flags(-O3 -fopenmp-simd -fPIC -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-missing-braces)
+endif()
+  add_definitions(-DSIMDE_ENABLE_NATIVE_ALIASES -DSIMDE_ENABLE_OPENMP)
 
+  include_directories(simde)
+endif()
 include_directories(.)
 
 set(SOURCE

@@ -20,8 +20,8 @@
 	#undef min
 #else
 	#include <stddef.h>
-	#ifdef __GNUC__
-		// GNU C supports forcing inline, just via a different syntax.
+	#if defined(__GNUC__) || defined(__clang__)
+		// GNU C / Clang supports forcing inline, just via a different syntax.
         // disable this on MinGW compiler
 		#define __forceinline inline __attribute__((always_inline))
 	#else
@@ -43,7 +43,13 @@
 
 // Windows has this enabled implicitly (and uses different headers), GNU C compilers generally require passing an additional flag, so check for that first.
 #ifdef __AVX__
+#ifdef _WIN32
 #include <xmmintrin.h>
+#endif
+#endif
+#ifdef __APPLE__
+#include <simde/x86/sse.h>
+#include <simde/x86/sse2.h>
 #endif
 
 #ifdef __GNUC__
