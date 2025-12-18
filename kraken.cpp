@@ -17,9 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "kraken.h"
-#include "compress.h"
-#include "compr_kraken.h"
-#include "compr_match_finder.h"
+#include <immintrin.h>
 
 // Header in front of each 256k block
 typedef struct KrakenHeader {
@@ -107,7 +105,7 @@ typedef struct HuffReader {
 	// Array to hold the output of the huffman read array operation
 	byte *output, *output_end;
 	// We decode three parallel streams, two forwards, |src| and |src_mid|
-	// while |src_end| is decoded backwards. 
+	// while |src_end| is decoded backwards.
 	const byte *src, *src_mid, *src_end, *src_mid_org;
 	int src_bitpos, src_mid_bitpos, src_end_bitpos;
 	uint32 src_bits, src_mid_bits, src_end_bits;
@@ -139,17 +137,17 @@ void FreeAligned(void *p) {
 	free(((void**)p)[-1]);
 }
 
-//uint32 BSR(uint32 x) {
-//	unsigned long index;
-//	_BitScanReverse(&index, x);
-//	return index;
-//}
-//
-//uint32 BSF(uint32 x) {
-//	unsigned long index;
-//	_BitScanForward(&index, x);
-//	return index;
-//}
+uint32 BSR(uint32 x) {
+	unsigned long index;
+	_BitScanReverse(&index, x);
+	return index;
+}
+
+uint32 BSF(uint32 x) {
+	unsigned long index;
+	_BitScanForward(&index, x);
+	return index;
+}
 
 // Read more bytes to make sure we always have at least 24 bits in |bits|.
 void BitReader_Refill(BitReader *bits) {
@@ -2237,7 +2235,7 @@ bool Kraken_UnpackOffsets(const byte *src, const byte *src_end,
 		}
 	}
 	else {
-		// New way of coding offsets 
+		// New way of coding offsets
 		int *offs_stream_org = offs_stream;
 		const uint8 *packed_offs_stream_end = packed_offs_stream + packed_offs_stream_size;
 		uint32 cmd, offs;
@@ -2831,56 +2829,3 @@ FAIL:
 	Kraken_Destroy(dec);
 	return -1;
 }
-
-// The decompressor will write outside of the target buffer.
-#define SAFE_SPACE 64
-
-void error(const char *s) {
-	fprintf(stderr, "%s\n", s);
-	exit(1);
-}
-
-enum {
-	kCompressor_Kraken = 8,
-	kCompressor_Mermaid = 9,
-	kCompressor_Selkie = 11,
-	kCompressor_Hydra = 12,
-	kCompressor_Leviathan = 13,
-};
-
-bool arg_stdout, arg_force, arg_quiet, arg_dll;
-int arg_compressor = kCompressor_Kraken, arg_level = 5;
-char arg_direction;
-char *verifyfolder;
-
-
-EXPORT int Kraken_Compress(uint8* src, size_t src_len, byte* dst, int level) {
-
-    int outbytes = CompressBlock_Kraken(src, dst, src_len, level, 0, 0, 0);
-
-    if (outbytes < 0) error("compress failed");
-
-    return outbytes;
-}
-
-
-
-//bool Verify(const char *filename, uint8 *output, int outbytes, const char *curfile) {
-//	int test_size;
-//	byte *test = load_file(filename, &test_size);
-//	if (!test) {
-//		fprintf(stderr, "file open error: %s\n", filename);
-//		return false;
-//	}
-//	if (test_size != outbytes) {
-//		fprintf(stderr, "%s: ERROR: File size difference: %d vs %d\n", filename, outbytes, test_size);
-//		return false;
-//	}
-//	for (int i = 0; i != test_size; i++) {
-//		if (test[i] != output[i]) {
-//			fprintf(stderr, "%s: ERROR: File difference at 0x%x. Was %d instead of %d\n", curfile, i, output[i], test[i]);
-//			return false;
-//		}
-//	}
-//	return true;
-//}

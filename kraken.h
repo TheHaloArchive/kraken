@@ -87,4 +87,3 @@ typedef int16_t int16;
 typedef unsigned int uint;
 
 EXPORT int Kraken_Decompress(const byte *src, size_t src_len, byte *dst, size_t dst_len);
-EXPORT int Kraken_Compress(uint8* src, size_t src_len, byte* dst, int level);

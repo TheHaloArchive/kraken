@@ -36,6 +36,9 @@ if(WIN32)
 add_cxx_compiler_flags(-pedantic -fno-permissive -pedantic-errors -Wall -Wextra -Wshadow -Wstrict-aliasing -Wno-misleading-indentation "-ftemplate-depth=1024")
 elseif(APPLE)
   message(STATUS "Configuring for macOS")
+if(NOT APPLE)
+  add_cxx_compiler_flags(-msse2)
+endif()
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
   add_cxx_compiler_flags(-O3 -mavx -mavx2 -fPIC -pedantic -fpermissive -pedantic-errors -Wstrict-aliasing -Wno-misleading-indentation "-ftemplate-depth=1024" -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-missing-braces -Wno-deprecated-declarations)
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
@@ -48,27 +51,9 @@ endif()
 include_directories(.)
 
 set(SOURCE
-        bits_rev_table.h
-        log_lookup.h
-        qsort.h
-        compr_util.h
-        compress.h
-        compress.cpp
-        compr_multiarray.cpp
-        compr_match_finder.h
-        compr_match_finder.cpp
-        compr_leviathan.h
-        compr_leviathan.cpp
-        compr_kraken.h
-        compr_kraken.cpp
-        compr_tans.cpp
-        compr_entropy.h
-        compr_entropy.cpp
-        match_hasher.h
         kraken.h
         kraken.cpp
         )
 
 add_library(kraken SHARED ${SOURCE})
 add_library(kraken_static STATIC ${SOURCE})
-add_executable(main ${SOURCE} main.cpp)
